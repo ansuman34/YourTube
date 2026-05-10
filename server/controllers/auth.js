@@ -41,3 +41,47 @@ export const updateprofile = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+export const getuser = async (req, res) => {
+  const { id: _id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(_id)) {
+    return res.status(400).json({ message: "Invalid user id" });
+  }
+
+  try {
+    const user = await users.findById(_id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+export const searchUser = async (req, res) => {
+  try {
+    const { name } = req.query;
+
+    if (!name || name.trim() === "") {
+      return res.status(400).json({ message: "Search name is required" });
+    }
+
+    const user = await users.findOne({
+      $or: [
+        { name: { $regex: name, $options: "i" } },
+        { channelname: { $regex: name, $options: "i" } },
+      ],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Search user error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};

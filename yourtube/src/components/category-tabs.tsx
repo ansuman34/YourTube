@@ -1,35 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { VIDEO_CATEGORIES } from "@/lib/video";
 
-const categories = [
-  "All",
-  "Music",
-  "Gaming",
-  "Movies",
-  "News",
-  "Sports",
-  "Technology",
-  "Comedy",
-  "Education",
-  "Science",
-  "Travel",
-  "Food",
-  "Fashion",
-];
+type CategoryTabsProps = {
+  activeCategory: string;
+  onCategoryChange: (category: string) => void;
+};
 
-export default function CategoryTabs() {
-  const [activeCategory, setActiveCategory] = useState("All");
+export default function CategoryTabs({
+  activeCategory,
+  onCategoryChange,
+}: CategoryTabsProps) {
+  const categories = useMemo(() => VIDEO_CATEGORIES, []);
 
   return (
-    <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+    <div className="mb-5 flex gap-2 overflow-x-auto pb-2">
       {categories.map((category) => (
         <Button
           key={category}
           variant={activeCategory === category ? "default" : "secondary"}
-          className="whitespace-nowrap"
-          onClick={() => setActiveCategory(category)}
+          className="h-8 whitespace-nowrap rounded-full px-4"
+          onClick={() => onCategoryChange(category)}
         >
           {category}
         </Button>

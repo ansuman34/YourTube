@@ -1,34 +1,69 @@
-"use clinet";
+"use client";
+
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import { useRouter } from "next/router";
+import { toast } from "sonner";
+import { useUser } from "@/lib/AuthContext";
+import {
+  formatViews,
+  getChannelInitial,
+  getVideoUrl,
+  type VideoRecord,
+} from "@/lib/video";
 
-const videos = "/video/vdo.mp4";
-export default function VideoCard({ video }: any) {
+export default function VideoCard({ video }: { video: VideoRecord }) {
+  const router = useRouter();
+  const { user, authLoading, handlegooglesignin } = useUser();
+
+  if (!video?._id) return null;
+
+  const watchUrl = `/watch/${video._id}`;
+  const handleWatchClick = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (user || authLoading) return;
+
+    event.preventDefault();
+    toast.message("Sign in to watch this video.");
+    const signedInUser = await handlegooglesignin();
+    if (signedInUser) {
+      router.push(watchUrl);
+    }
+  };
+
   return (
-    <Link href={`/watch/${video?._id}`} className="group">
-      <div className="space-y-3">
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
+    <Link href={watchUrl} className="group block" onClick={handleWatchClick}>
+      <div className="space-y-3 rounded-lg p-2 transition-colors hover:bg-zinc-50">
+        <div className="relative aspect-video overflow-hidden rounded-lg bg-zinc-100">
           <video
-            src={`${process.env.BACKEND_URL}/${video?.filepath}`}
-            className="object-cover group-hover:scale-105 transition-transform duration-200"
+            src={getVideoUrl(video.filepath)}
+            className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+            muted
+            preload="metadata"
+            playsInline
           />
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1 rounded">
-            10:24
-          </div>
+          {!user && (
+            <div className="absolute bottom-2 right-2 rounded bg-black/80 px-2 py-1 text-xs text-white">
+              Sign in
+            </div>
+          )}
         </div>
         <div className="flex gap-3">
-          <Avatar className="w-9 h-9 flex-shrink-0">
-            <AvatarFallback>{video?.videochanel[0]}</AvatarFallback>
+          <Avatar className="h-9 w-9 flex-shrink-0">
+            <AvatarFallback>{getChannelInitial(video.videochanel)}</AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600">
-              {video?.videotitle}
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-sm font-medium leading-5 group-hover:text-red-600">
+              {video.videotitle || "Untitled video"}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">{video?.videochanel}</p>
-            <p className="text-sm text-gray-600">
-              {video?.views.toLocaleString()} views •{" "}
-              {formatDistanceToNow(new Date(video?.createdAt))} ago
+            <p className="mt-1 text-sm text-zinc-600">
+              {video.videochanel || "YourTube channel"}
+            </p>
+            <p className="text-sm text-zinc-600">
+              {formatViews(video.views)} •{" "}
+              {video.createdAt
+                ? `${formatDistanceToNow(new Date(video.createdAt))} ago`
+                : "recently"}
             </p>
           </div>
         </div>

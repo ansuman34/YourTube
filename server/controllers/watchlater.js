@@ -1,8 +1,16 @@
 import watchlater from "../Modals/watchlater.js";
+import mongoose from "mongoose";
 
 export const handlewatchlater = async (req, res) => {
   const { userId } = req.body;
   const { videoId } = req.params;
+  if (
+    !mongoose.Types.ObjectId.isValid(userId) ||
+    !mongoose.Types.ObjectId.isValid(videoId)
+  ) {
+    return res.status(400).json({ message: "Invalid user or video id" });
+  }
+
   try {
     const exisitingwatchlater = await watchlater.findOne({
       viewer: userId,
@@ -23,6 +31,10 @@ export const handlewatchlater = async (req, res) => {
 
 export const getallwatchlater = async (req, res) => {
   const { userId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ message: "Invalid user id" });
+  }
+
   try {
     const watchlatervideo = await watchlater
       .find({ viewer: userId })

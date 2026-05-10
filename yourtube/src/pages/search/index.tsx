@@ -6,7 +6,7 @@ const index = () => {
   const router = useRouter();
   const { q } = router.query;
   return (
-    <div className="flex-1 p-4">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
       <div className="max-w-6xl">
         {q && (
           <div className="mb-6">
@@ -19,7 +19,7 @@ const index = () => {
           <SearchResult query={q || ""} />
         </Suspense>
       </div>
-    </div>
+    </main>
   );
 };
 

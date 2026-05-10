@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+server/node_modules/
+yourtube/node_modules/
+
+# build output
+yourtube/.next/
+yourtube/out/
+yourtube/build/
+
+# environment
+.env
+.env.*
+server/.env
+yourtube/.env.local
+
+# uploaded media should live in object storage in production
+server/uploads/
+
+# misc
+*.log
+.DS_Store

@@ -1,10 +1,9 @@
-import HistoryContent from "@/components/HistoryContent";
 import LikedContent from "@/components/LikedContent";
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense } from "react";
 
 const index = () => {
   return (
-    <main className="flex-1 p-6">
+    <main className="min-w-0 flex-1 p-4 sm:p-6">
       <div className="max-w-4xl">
         <h1 className="text-2xl font-bold mb-6">Liked videos</h1>
         <Suspense fallback={<div>Loading liked videos...</div>}>

@@ -6,20 +6,23 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Progress } from "./ui/progress";
 import axiosInstance from "@/lib/axiosinstance";
+import { VIDEO_CATEGORIES } from "@/lib/video";
 
-const VideoUploader = ({ channelId, channelName }: any) => {
+const VideoUploader = ({ channelId, channelName, onUploadSuccess }: any) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoTitle, setVideoTitle] = useState("");
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [videoDescription, setVideoDescription] = useState("");
+  const [videoCategory, setVideoCategory] = useState("Music");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const handlefilechange = (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       const file = files[0];
-      if (!file.type.startsWith("video/")) {
-        toast.error("Please upload a valid video file.");
+      if (file.type !== "video/mp4") {
+        toast.error("Please upload an MP4 video file.");
         return;
       }
       if (file.size > 100 * 1024 * 1024) {
@@ -46,7 +49,9 @@ const VideoUploader = ({ channelId, channelName }: any) => {
   const cancelUpload = () => {
     if (isUploading) {
       toast.error("Your video upload has been cancelled");
+      return;
     }
+    resetForm();
   };
   const handleUpload = async () => {
     if (!videoFile || !videoTitle.trim()) {
@@ -57,15 +62,13 @@ const VideoUploader = ({ channelId, channelName }: any) => {
     formdata.append("file", videoFile);
     formdata.append("videotitle", videoTitle);
     formdata.append("videochanel", channelName);
+    formdata.append("description", videoDescription);
+    formdata.append("category", videoCategory);
     formdata.append("uploader", channelId);
-    console.log(formdata)
     try {
       setIsUploading(true);
       setUploadProgress(0);
-      const res = await axiosInstance.post("/video/upload", formdata, {
-         headers: {
-    "Content-Type": "multipart/form-data", // ✅ MUST for FormData
-  },
+      await axiosInstance.post("/video/upload", formdata, {
         onUploadProgress: (progresEvent: any) => {
           const progress = Math.round(
             (progresEvent.loaded * 100) / progresEvent.total
@@ -73,8 +76,14 @@ const VideoUploader = ({ channelId, channelName }: any) => {
           setUploadProgress(progress);
         },
       });
+      setUploadComplete(true);
       toast.success("Upload successfully");
-      resetForm();
+      if (onUploadSuccess) {
+        onUploadSuccess();
+      }
+      setTimeout(() => {
+        resetForm();
+      }, 2000);
     } catch (error) {
       console.error("Error uploading video:", error);
       toast.error("There was an error uploading your video. Please try again.");
@@ -100,13 +109,13 @@ const VideoUploader = ({ channelId, channelName }: any) => {
               or click to select files
             </p>
             <p className="text-xs text-gray-400 mt-4">
-              MP4, WebM, MOV or AVI • Up to 100MB
+              MP4 only • Up to 100MB
             </p>
             <input
               type="file"
               ref={fileInputRef}
               className="hidden"
-              accept="video/*"
+              accept="video/mp4"
               onChange={handlefilechange}
             />
           </div>
@@ -146,18 +155,37 @@ const VideoUploader = ({ channelId, channelName }: any) => {
                   className="mt-1"
                 />
               </div>
-            </div>
-
-            {isUploading && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Uploading...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <Progress value={uploadProgress} className="h-2" />
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <textarea
+                  id="description"
+                  value={videoDescription}
+                  onChange={(e) => setVideoDescription(e.target.value)}
+                  placeholder="Tell viewers what your video is about"
+                  disabled={isUploading || uploadComplete}
+                  className="mt-1 block w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-black focus:ring-1 focus:ring-black"
+                  rows={4}
+                />
               </div>
-            )}
-
+              <div>
+                <Label htmlFor="category">Theme / Category</Label>
+                <select
+                  id="category"
+                  value={videoCategory}
+                  onChange={(e) => setVideoCategory(e.target.value)}
+                  disabled={isUploading || uploadComplete}
+                  className="mt-1 block w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm outline-none transition focus:border-black focus:ring-1 focus:ring-black"
+                >
+                  {VIDEO_CATEGORIES.filter((category) => category !== "All").map(
+                    (category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+            </div>
             <div className="flex justify-end gap-3">
               {!uploadComplete && (
                 <>

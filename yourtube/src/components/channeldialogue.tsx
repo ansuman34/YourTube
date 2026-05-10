@@ -40,7 +40,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
         description: "",
       });
     }
-  }, [channeldata]);
+  }, [channeldata, mode, user?.name]);
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -49,21 +49,31 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
   };
   const handlesubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!user?._id || !formData.name.trim()) return;
+
+    setisSubmitting(true);
     const payload = {
-      channelname: formData.name,
+      channelname: formData.name.trim(),
       description: formData.description,
     };
-    const response = await axiosInstance.patch(
-      `/user/update/${user._id}`,
-      payload
-    );
-    login(response?.data);
-    router.push(`/channel/${user?._id}`);
-    setFormData({
-      name: "",
-      description: "",
-    });
-    onclose();
+    try {
+      const response = await axiosInstance.patch(
+        `/user/update/${user._id}`,
+        payload
+      );
+      const updatedUser = response.data?.result || response.data;
+      login(updatedUser);
+      router.push(`/channel/${user._id}`);
+      setFormData({
+        name: "",
+        description: "",
+      });
+      onclose();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setisSubmitting(false);
+    }
   };
   return (
     <Dialog open={isopen} onOpenChange={onclose}>
@@ -83,6 +93,7 @@ const Channeldialogue = ({ isopen, onclose, channeldata, mode }: any) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              required
             />
           </div>
           {/* Channel Description */}

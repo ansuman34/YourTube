@@ -1,11 +1,10 @@
 import {
   Home,
-  Compass,
-  PlaySquare,
   Clock,
   ThumbsUp,
   History,
   User,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -18,24 +17,12 @@ const Sidebar = () => {
 
   const [isdialogeopen, setisdialogeopen] = useState(false);
   return (
-    <aside className="w-64 bg-white  border-r min-h-screen p-2">
+    <aside className="sticky top-[57px] hidden h-[calc(100vh-57px)] w-60 shrink-0 overflow-y-auto border-r bg-white p-2 md:block">
       <nav className="space-y-1">
         <Link href="/">
           <Button variant="ghost" className="w-full justify-start">
             <Home className="w-5 h-5 mr-3" />
             Home
-          </Button>
-        </Link>
-        <Link href="/explore">
-          <Button variant="ghost" className="w-full justify-start">
-            <Compass className="w-5 h-5 mr-3" />
-            Explore
-          </Button>
-        </Link>
-        <Link href="/subscriptions">
-          <Button variant="ghost" className="w-full justify-start">
-            <PlaySquare className="w-5 h-5 mr-3" />
-            Subscriptions
           </Button>
         </Link>
 
@@ -60,8 +47,14 @@ const Sidebar = () => {
                   Watch later
                 </Button>
               </Link>
+              <Link href="/downloads">
+                <Button variant="ghost" className="w-full justify-start">
+                  <Download className="w-5 h-5 mr-3" />
+                  Downloads
+                </Button>
+              </Link>
               {user?.channelname ? (
-                <Link href={`/channel/${user.id}`}>
+                <Link href={`/channel/${user._id}`}>
                   <Button variant="ghost" className="w-full justify-start">
                     <User className="w-5 h-5 mr-3" />
                     Your channel

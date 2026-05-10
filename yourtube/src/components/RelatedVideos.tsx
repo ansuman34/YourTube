@@ -1,44 +1,55 @@
 import Link from "next/link";
-import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
+import {
+  formatViews,
+  getVideoUrl,
+  type VideoRecord,
+} from "@/lib/video";
 
 interface RelatedVideosProps {
-  videos: Array<{
-    _id: string;
-    videotitle: string;
-    videochanel: string;
-    views: number;
-    createdAt: string;
-  }>;
+  videos: VideoRecord[];
 }
-const vid = "/video/vdo.mp4";
-export default function RelatedVideos({ videos }: RelatedVideosProps) {
+
+export default function RelatedVideos({ videos = [] }: RelatedVideosProps) {
+  if (videos.length === 0) {
+    return (
+      <aside className="rounded-lg border border-dashed border-zinc-300 p-5 text-sm text-zinc-600">
+        No related videos yet.
+      </aside>
+    );
+  }
+
   return (
-    <div className="space-y-2">
-      {videos.map((video) => (
+    <aside className="space-y-3">
+      {videos.slice(0, 12).map((video) => (
         <Link
           key={video._id}
           href={`/watch/${video._id}`}
-          className="flex gap-2 group"
+          className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-zinc-50"
         >
-          <div className="relative w-40 aspect-video bg-gray-100 rounded overflow-hidden flex-shrink-0">
+          <div className="relative aspect-video w-40 flex-shrink-0 overflow-hidden rounded bg-zinc-100">
             <video
-              src={vid}
-              className="object-cover group-hover:scale-105 transition-transform duration-200"
+              src={getVideoUrl(video.filepath)}
+              className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+              muted
+              preload="metadata"
+              playsInline
             />
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-sm line-clamp-2 group-hover:text-blue-600">
-              {video.videotitle}
+          <div className="min-w-0 flex-1">
+            <h3 className="line-clamp-2 text-sm font-medium leading-5 group-hover:text-red-600">
+              {video.videotitle || "Untitled video"}
             </h3>
-            <p className="text-xs text-gray-600 mt-1">{video.videochanel}</p>
-            <p className="text-xs text-gray-600">
-              {video.views.toLocaleString()} views •{" "}
-              {formatDistanceToNow(new Date(video.createdAt))} ago
+            <p className="mt-1 text-xs text-zinc-600">{video.videochanel}</p>
+            <p className="text-xs text-zinc-600">
+              {formatViews(video.views)} •{" "}
+              {video.createdAt
+                ? `${formatDistanceToNow(new Date(video.createdAt))} ago`
+                : "recently"}
             </p>
           </div>
         </Link>
       ))}
-    </div>
+    </aside>
   );
 }

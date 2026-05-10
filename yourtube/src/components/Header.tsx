@@ -1,4 +1,16 @@
-import { Bell, Menu, Mic, Search, User, VideoIcon } from "lucide-react";
+import {
+  Bell,
+  Clock,
+  Download,
+  History,
+  Home,
+  Menu,
+  Search,
+  User,
+  VideoIcon,
+  X,
+  ThumbsUp,
+} from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
@@ -14,17 +26,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import Channeldialogue from "./channeldialogue";
 import { useRouter } from "next/router";
 import { useUser } from "@/lib/AuthContext";
+import { toast } from "sonner";
 
 const Header = () => {
   const { user, logout, handlegooglesignin } = useUser();
-  // const user: any = {
-  //   id: "1",
-  //   name: "John Doe",
-  //   email: "john@example.com",
-  //   image: "https://github.com/shadcn.png?height=32&width=32",
-  // };
   const [searchQuery, setSearchQuery] = useState("");
   const [isdialogeopen, setisdialogeopen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,25 +45,47 @@ const Header = () => {
       handleSearch(e as any);
     }
   };
+
+  const handleNotificationClick = () => {
+    if (!user) {
+      toast.message("Please sign in first.");
+      return;
+    }
+    toast.message("No new notifications");
+  };
+
+  const handleUploadClick = () => {
+    if (!user) {
+      toast.message("Please sign in first.");
+      return;
+    }
+    router.push("/upload");
+  };
   return (
-    <header className="flex items-center justify-between px-4 py-2 bg-white border-b">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon">
-          <Menu className="w-6 h-6" />
+    <header className="sticky top-0 z-40 flex items-center justify-between gap-3 border-b bg-white/95 px-3 py-2 backdrop-blur sm:px-4">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="inline-flex sm:hidden"
+          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+          aria-label="Toggle navigation menu"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </Button>
-        <Link href="/" className="flex items-center gap-1">
-          <div className="bg-red-600 p-1 rounded">
+        <Link href="/" className="flex shrink-0 items-center gap-1">
+          <div className="rounded bg-red-600 p-1">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
           </div>
-          <span className="text-xl font-medium">YourTube</span>
-          <span className="text-xs text-gray-400 ml-1">IN</span>
+          <span className="text-lg font-semibold sm:text-xl">YourTube</span>
+          <span className="ml-1 hidden text-xs text-gray-400 sm:inline">IN</span>
         </Link>
       </div>
       <form
         onSubmit={handleSearch}
-        className="flex items-center gap-2 flex-1 max-w-2xl mx-4"
+        className="mx-0 flex max-w-2xl flex-1 items-center gap-2 sm:mx-4"
       >
         <div className="flex flex-1">
           <Input
@@ -64,26 +94,33 @@ const Header = () => {
             value={searchQuery}
             onKeyPress={handleKeypress}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="rounded-l-full border-r-0 focus-visible:ring-0"
+            className="h-9 rounded-l-full border-r-0 text-sm focus-visible:ring-0"
           />
           <Button
             type="submit"
-            className="rounded-r-full px-6 bg-gray-50 hover:bg-gray-100 text-gray-600 border border-l-0"
+            className="h-9 rounded-r-full border border-l-0 bg-gray-50 px-3 text-gray-600 hover:bg-gray-100 sm:px-5"
           >
             <Search className="w-5 h-5" />
           </Button>
         </div>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Mic className="w-5 h-5" />
-        </Button>
       </form>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         {user ? (
           <>
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden sm:inline-flex"
+              onClick={handleUploadClick}
+            >
               <VideoIcon className="w-6 h-6" />
             </Button>
-            <Button variant="ghost" size="icon">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden sm:inline-flex"
+              onClick={handleNotificationClick}
+            >
               <Bell className="w-6 h-6" />
             </Button>
             <DropdownMenu>
@@ -132,11 +169,11 @@ const Header = () => {
         ) : (
           <>
             <Button
-              className="flex items-center gap-2"
+              className="flex h-9 items-center gap-2 rounded-full px-3 sm:px-4"
               onClick={handlegooglesignin}
             >
               <User className="w-4 h-4" />
-              Sign in
+              <span className="hidden sm:inline">Sign in</span>
             </Button>
           </>
         )}{" "}
@@ -146,6 +183,103 @@ const Header = () => {
         onclose={() => setisdialogeopen(false)}
         mode="create"
       />
+      {isMobileMenuOpen && (
+        <div className="absolute inset-x-0 top-full z-50 border-b border-t bg-white shadow-sm sm:hidden">
+          <div className="space-y-1 px-3 py-3">
+            <Link href="/">
+              <Button variant="ghost" className="w-full justify-start">
+                <Home className="mr-3 h-4 w-4" />
+                Home
+              </Button>
+            </Link>
+            {user ? (
+              <>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={handleUploadClick}
+                >
+                  <VideoIcon className="mr-3 h-4 w-4" />
+                  Upload
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={handleNotificationClick}
+                >
+                  <Bell className="mr-3 h-4 w-4" />
+                  Notifications
+                </Button>
+                <Link href="/history">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <History className="mr-3 h-4 w-4" />
+                    History
+                  </Button>
+                </Link>
+                <Link href="/liked">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <ThumbsUp className="mr-3 h-4 w-4" />
+                    Liked
+                  </Button>
+                </Link>
+                <Link href="/watch-later">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Clock className="mr-3 h-4 w-4" />
+                    Watch later
+                  </Button>
+                </Link>
+                <Link href="/downloads">
+                  <Button variant="ghost" className="w-full justify-start">
+                    <Download className="mr-3 h-4 w-4" />
+                    Downloads
+                  </Button>
+                </Link>
+                {user?.channelname ? (
+                  <Link href={`/channel/${user._id}`}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      <User className="mr-3 h-4 w-4" />
+                      Your channel
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => {
+                      setisdialogeopen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Create channel
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    logout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => {
+                  handlegooglesignin();
+                  setIsMobileMenuOpen(false);
+                }}
+              >
+                <User className="mr-3 h-4 w-4" />
+                Sign in
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

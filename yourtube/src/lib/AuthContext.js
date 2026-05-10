@@ -9,10 +9,13 @@ const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const login = (userdata) => {
-    setUser(userdata);
-    localStorage.setItem("user", JSON.stringify(userdata));
+    const actualUser = userdata?.result || userdata;
+    setUser(actualUser);
+    localStorage.setItem("user", JSON.stringify(actualUser));
+    return actualUser;
   };
   const logout = async () => {
     setUser(null);
@@ -33,12 +36,23 @@ export const UserProvider = ({ children }) => {
         image: firebaseuser.photoURL || "https://github.com/shadcn.png",
       };
       const response = await axiosInstance.post("/user/login", payload);
-      login(response.data.result);
+      return login(response.data.result);
     } catch (error) {
       console.error(error);
+      return null;
     }
   };
   useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser?.result || parsedUser);
+      } catch {
+        localStorage.removeItem("user");
+      }
+    }
+
     const unsubcribe = onAuthStateChanged(auth, async (firebaseuser) => {
       if (firebaseuser) {
         try {
@@ -52,14 +66,22 @@ export const UserProvider = ({ children }) => {
         } catch (error) {
           console.error(error);
           logout();
+        } finally {
+          setAuthLoading(false);
         }
+      } else {
+        setUser(null);
+        localStorage.removeItem("user");
+        setAuthLoading(false);
       }
     });
     return () => unsubcribe();
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, login, logout, handlegooglesignin }}>
+    <UserContext.Provider
+      value={{ user, authLoading, login, logout, handlegooglesignin }}
+    >
       {children}
     </UserContext.Provider>
   );

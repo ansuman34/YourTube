@@ -2,86 +2,107 @@ import Comments from "@/components/Comments";
 import RelatedVideos from "@/components/RelatedVideos";
 import VideoInfo from "@/components/VideoInfo";
 import Videopplayer from "@/components/Videopplayer";
+import { Button } from "@/components/ui/button";
+import { useUser } from "@/lib/AuthContext";
 import axiosInstance from "@/lib/axiosinstance";
-import { notFound } from "next/navigation";
+import { type VideoRecord } from "@/lib/video";
+import { Lock, User } from "lucide-react";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const index = () => {
+const WatchPage = () => {
   const router = useRouter();
   const { id } = router.query;
-  const [videos, setvideo] = useState<any>(null);
-  const [video, setvide] = useState<any>(null);
-  const [loading, setloading] = useState(true);
+  const { user, authLoading, handlegooglesignin } = useUser();
+  const [video, setVideo] = useState<VideoRecord | null>(null);
+  const [relatedVideos, setRelatedVideos] = useState<VideoRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    const fetchvideo = async () => {
-      if (!id || typeof id !== "string") return;
+    const fetchVideo = async () => {
+      if (!id || typeof id !== "string" || authLoading || !user) return;
+
+      setLoading(true);
+      setError("");
       try {
-        const res = await axiosInstance.get("/video/getall");
-        const video = res.data?.filter((vid: any) => vid._id === id);
-        setvideo(video[0]);
-        setvide(res.data);
-      } catch (error) {
-        console.log(error);
+        const [videoRes, allVideosRes] = await Promise.all([
+          axiosInstance.get(`/video/${id}`),
+          axiosInstance.get("/video/getall"),
+        ]);
+        setVideo(videoRes.data);
+        setRelatedVideos(
+          Array.isArray(allVideosRes.data)
+            ? allVideosRes.data.filter((item: VideoRecord) => item._id !== id)
+            : []
+        );
+      } catch (error: any) {
+        console.error(error);
+        setError(error.response?.data?.message || "Video not found");
       } finally {
-        setloading(false);
+        setLoading(false);
       }
     };
-    fetchvideo();
-  }, [id]);
-  // const relatedVideos = [
-  //   {
-  //     _id: "1",
-  //     videotitle: "Amazing Nature Documentary",
-  //     filename: "nature-doc.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/nature-doc.mp4",
-  //     filesize: "500MB",
-  //     videochanel: "Nature Channel",
-  //     Like: 1250,
-  //     Dislike: 50,
-  //     views: 45000,
-  //     uploader: "nature_lover",
-  //     createdAt: new Date().toISOString(),
-  //   },
-  //   {
-  //     _id: "2",
-  //     videotitle: "Cooking Tutorial: Perfect Pasta",
-  //     filename: "pasta-tutorial.mp4",
-  //     filetype: "video/mp4",
-  //     filepath: "/videos/pasta-tutorial.mp4",
-  //     filesize: "300MB",
-  //     videochanel: "Chef's Kitchen",
-  //     Like: 890,
-  //     Dislike: 20,
-  //     views: 23000,
-  //     uploader: "chef_master",
-  //     createdAt: new Date(Date.now() - 86400000).toISOString(),
-  //   },
-  // ];
+
+    fetchVideo();
+  }, [id, user, authLoading]);
+
+  if (authLoading) {
+    return <main className="flex-1 p-6">Loading...</main>;
+  }
+
+  if (!user) {
+    return (
+      <main className="flex min-h-[calc(100vh-57px)] flex-1 items-center justify-center p-6">
+        <div className="max-w-md rounded-lg border bg-white p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h1 className="text-2xl font-semibold">Sign in to watch</h1>
+          <p className="mt-2 text-sm text-zinc-600">
+            You can browse videos on the home page, but playback is available
+            after signing in.
+          </p>
+          <Button
+            className="mt-6 rounded-full"
+            onClick={() => handlegooglesignin()}
+          >
+            <User className="h-4 w-4" />
+            Sign in with Google
+          </Button>
+        </div>
+      </main>
+    );
+  }
+
   if (loading) {
-    return <div>Loading..</div>;
+    return <main className="flex-1 p-6">Loading video...</main>;
   }
-  
-  if (!videos) {
-    return <div>Video not found</div>;
+
+  if (error || !video) {
+    return (
+      <main className="flex-1 p-6">
+        <div className="rounded-lg border border-red-100 bg-red-50 p-6 text-red-700">
+          {error || "Video not found"}
+        </div>
+      </main>
+    );
   }
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            <Videopplayer video={videos} />
-            <VideoInfo video={videos} />
+    <main className="min-w-0 flex-1 bg-white">
+      <div className="mx-auto max-w-7xl p-3 sm:p-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 space-y-4">
+            <Videopplayer video={video} />
+            <VideoInfo video={video} />
             <Comments videoId={id} />
           </div>
-          <div className="space-y-4">
-            <RelatedVideos videos={video} />
-          </div>
+          <RelatedVideos videos={relatedVideos} />
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
-export default index;
+export default WatchPage;

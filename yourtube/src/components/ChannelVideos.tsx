@@ -1,5 +1,7 @@
 import VideoCard from "./videocard";
-export default function ChannelVideos({ videos }: any) {
+import { type VideoRecord } from "@/lib/video";
+
+export default function ChannelVideos({ videos }: { videos: VideoRecord[] }) {
   if (videos.length === 0) {
     return (
       <div className="text-center py-12">
@@ -11,8 +13,8 @@ export default function ChannelVideos({ videos }: any) {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Videos</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {videos.map((video: any) => (
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        {videos.map((video) => (
           <VideoCard key={video._id} video={video} />
         ))}
       </div>
